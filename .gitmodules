@@ -30,3 +30,8 @@
 	url = https://github.com/klihub/meta-flatpak.git
 	branch = master
 	ignore = untracked
+[submodule "meta-ostree"]
+	path = meta-ostree
+	url = git@github.com:klihub/meta-ostree.git
+	branch = master
+	ignore = untracked
