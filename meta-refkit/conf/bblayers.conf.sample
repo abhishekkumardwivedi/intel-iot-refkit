@@ -15,6 +15,7 @@ REFKIT_LAYERS = " \
   ##OEROOT##/../meta-iotqa \
   ##OEROOT##/../meta-security-isafw \
   ##OEROOT##/../meta-flatpak \
+  ##OEROOT##/../meta-ostree \
   "
 
 # REFKIT_LAYERS += "##OEROOT##/../meta-openembedded/meta-efl"
