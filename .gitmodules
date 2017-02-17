@@ -1,7 +1,7 @@
 [submodule "openembedded-core"]
 	path = openembedded-core
 	url = git@github.com:klihub/openembedded-core.git
-	branch = kli/devel/flatpak
+	branch = kli/devel/WiP
 [submodule "bitbake"]
 	path = bitbake
 	url = http://git.openembedded.org/bitbake
@@ -31,10 +31,10 @@
 [submodule "meta-flatpak"]
 	path = meta-flatpak
 	url = git@github.com:klihub/meta-flatpak.git
-	branch = kli/devel/flatpak
+	branch = kli/devel/WiP
 	ignore = untracked
 [submodule "meta-ostree"]
 	path = meta-ostree
 	url = git@github.com:klihub/meta-ostree.git
-	branch = kli/devel/flatpak
+	branch = kli/devel/WiP
 	ignore = untracked
