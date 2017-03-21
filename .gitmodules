@@ -37,3 +37,6 @@
 	url = https://github.com/klihub/meta-flatpak.git
 	branch = pr/intel-iot-refkit/initial
 	ignore = untracked
+[submodule "meta-gplv2"]
+	path = meta-gplv2
+	url = https://git.yoctoproject.org/git/meta-gplv2
