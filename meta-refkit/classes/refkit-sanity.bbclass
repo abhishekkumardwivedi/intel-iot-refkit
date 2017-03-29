@@ -17,6 +17,9 @@ REFKIT_QA_IMAGE_SYMLINK_WHITELIST = " \
     /run/resolv.conf \
     /var/volatile/log \
     /var/volatile/tmp \
+    ${@bb.utils.contains('IMAGE_FEATURES', 'ostree', \
+      '../run ../run/lock /var/mnt /var/home /sysroot/tmp /sysroot/ostree', \
+      '' , d)} \
 "
 
 # Additional image checks.
@@ -24,6 +27,25 @@ python refkit_qa_image () {
     qa_sane = True
 
     rootfs = d.getVar("IMAGE_ROOTFS", True)
+    distro = d.getVar("DISTRO")
+
+    ostree = bb.utils.contains("IMAGE_FEATURES", "ostree", True, False, d) and \
+                 d.getVar("IMAGE_BASENAME").endswith('ostree')
+
+    if ostree:
+        ostree_dir = d.getVar("IMAGE_ROOTFS") + "/ostree"
+        ostree_repo = d.getVar("IMAGE_ROOTFS") + "/ostree/repo/"
+        cmd = "ostree --repo=%s/repo rev-parse %s:%s/%s/standard" % \
+            (ostree_dir, distro, distro, "x86_64")
+        (status, sha256) = oe.utils.getstatusoutput(cmd)
+        if status != 0:
+            bb.fatal("Failed to resolve OSTree deploy path.")
+        ostree_root = '%s/deploy/%s/deploy/%s.0' % (ostree_dir, distro, sha256)
+        print('cmd: %s, status:%d, sha256:%s\n' % (cmd, status, sha256))
+        print('ostree_root: %s\n' % ostree_root)
+    else:
+        ostree_root = ""
+        ostree_repo = ""
 
     def resolve_links(target, root):
         if not target.startswith('/'):
@@ -33,9 +55,18 @@ python refkit_qa_image () {
             # Can't use os.path.join() here, it skips the
             # components before absolute paths.
             target = os.path.normpath(rootfs + target)
+        if ostree and target.startswith(rootfs + '/usr/'):
+            reloc = ostree_root + '/usr/' + target.split(rootfs + '/usr/')[1]
+            print('relocated %s -> %s\n' % (target, reloc))
+            target = reloc
+
         if os.path.islink(target):
+            if target in whitelist:
+                return target
             root = os.path.dirname(target)
             target = os.readlink(target)
+            if target in whitelist:
+                return target
             target = resolve_links(target, root)
         return target
 
@@ -49,6 +80,8 @@ python refkit_qa_image () {
     for root, dirs, files in os.walk(rootfs):
         for entry in files + dirs:
             path = os.path.join(root, entry)
+            if ostree and path.startswith(ostree_repo):
+                continue
             if os.path.islink(path):
                 target = os.readlink(path)
                 final_target = resolve_links(target, root)
