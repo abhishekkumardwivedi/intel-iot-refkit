@@ -18,7 +18,7 @@ REFKIT_QA_IMAGE_SYMLINK_WHITELIST = " \
     /var/volatile/log \
     /var/volatile/tmp \
     ${@bb.utils.contains('IMAGE_FEATURES', 'ostree', \
-      '../run ../run/lock /var/mnt /var/home /sysroot/tmp /sysroot/ostree', \
+      '../run ../run/lock var/mnt var/home sysroot/tmp sysroot/ostree', \
       '' , d)} \
 "
 
@@ -48,6 +48,8 @@ python refkit_qa_image () {
         ostree_repo = ""
 
     def resolve_links(target, root):
+        if ostree and target in whitelist:
+            return target
         if not target.startswith('/'):
             target = os.path.normpath(os.path.join(root, target))
         else:
@@ -64,7 +66,9 @@ python refkit_qa_image () {
             if target in whitelist:
                 return target
             root = os.path.dirname(target)
+            old = target
             target = os.readlink(target)
+            bb.warn('symlink %s resolved to %s\n' % (old, target))
             if target in whitelist:
                 return target
             target = resolve_links(target, root)
@@ -85,10 +89,11 @@ python refkit_qa_image () {
             if os.path.islink(path):
                 target = os.readlink(path)
                 final_target = resolve_links(target, root)
-                if not os.path.exists(final_target) and not final_target[len(rootfs):] in whitelist:
+                if not os.path.exists(final_target) and not final_target[len(rootfs):] in whitelist and not target in whitelist:
                     bb.error("Dangling symlink: %s -> %s -> %s does not resolve to a valid filesystem entry." %
                              (path, target, final_target))
-                    qa_sane = False
+                    if not ostree:
+                        qa_sane = False
 
     if not qa_sane:
         bb.fatal("Fatal QA errors found, failing task.")
